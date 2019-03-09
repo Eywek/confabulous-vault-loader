@@ -52,7 +52,7 @@ describe('Vault Loader', function() {
     it('should require a path when mandatory', function(done) {
         loader({ url: 'http://localhost:8200' })(confabulous, function(err, config) {
             assert(err)
-            assert.equal(err.message, 'path is required')
+            assert.equal(err.message, 'paths is required')
             done()
         })
     })
@@ -138,7 +138,7 @@ describe('Vault Loader', function() {
 
     it('should ignore 404s when not mandatory', function(done) {
         loader({ url: 'http://localhost:8200', path: 'secret/live/demo/missing', method: 'app-id', appId: 'svc-demo-api' , userId: 'demo-live', mandatory: false })(confabulous, function(err, config) {
-            assert.equal(err, true)
+            assert.equal(err, null)
             done()
         })
     })
@@ -184,7 +184,7 @@ describe('Vault Loader', function() {
     it('should emit change event when a previously missing page starts returning 200', function(done) {
 
         loader({ url: 'http://localhost:8200', path: 'secret/live/demo', method: 'app-id', appId: 'svc-demo-api' , userId: 'demo-live', watch: { interval: '1s' }, mandatory: false })(confabulous, function(err, config) {
-            assert.equal(err, true)
+            assert.equal(err, null)
 
             request({ method: 'POST', url: 'http://localhost:8200/v1/secret/live/demo', json: true, body: { loaded: 'loaded' }, headers: { 'X-Vault-Token': token }}, function(err, res, body) {
                 assert.ifError(err)
