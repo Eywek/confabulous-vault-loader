@@ -12,7 +12,7 @@ module.exports = function (_options, postProcessors) {
   if (_options && _options.path && !_options.paths) {
     _options.paths = [_options.path]
   }
-  var options = merge({}, { mandatory: true, watch: false, request: { json: true, timeout: 10000, gzip: true, forever: false, headers: {} } }, _options)
+  var options = merge({}, { mandatory: true, keepPaths: false, watch: false, request: { json: true, timeout: 10000, gzip: true, forever: false, headers: {} } }, _options)
   var exists = false
   var allowedResponseCodes = [200].concat(options.mandatory ? [] : 404)
   var checksums = new Map()
@@ -23,7 +23,11 @@ module.exports = function (_options, postProcessors) {
     setImmediate(function () {
       async.waterfall([validate, authenticate, watch, load], function (err, results) {
         if (err) return cb(err)
-        async.seq.apply(async, postProcessors)(Object.assign({}, ...results), cb)
+        results = Object.assign({}, ...results)
+        if (!options.keepPaths) {
+          results = Object.assign({}, ...Object.values(results))
+        }
+        async.seq.apply(async, postProcessors)(results, cb)
       })
     })
     return emitter
@@ -94,10 +98,10 @@ module.exports = function (_options, postProcessors) {
         get({ url: configUrl }, function (err, res, body) {
           if (err) return cb(err)
           if (!contains(allowedResponseCodes, res.statusCode)) return cb(new Error(format('%s returned %d', configUrl, res.statusCode)))
-          if (res.statusCode === 404) return next(null, [])
+          if (res.statusCode === 404) return next(null, { [path]: [] })
           exists = true
           checksums.set(path, generateChecksum(res.body.data))
-          next(err, body.data)
+          next(err, { [path]: body.data })
         })
       }, cb)
     }

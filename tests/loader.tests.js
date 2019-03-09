@@ -103,6 +103,20 @@ describe('Vault Loader', function() {
         })
     })
 
+    it('should load configuration', function(done) {
+
+      request({ method: 'POST', url: 'http://localhost:8200/v1/secret/live/demo', json: true, body: { loaded: 'loaded' }, headers: { 'X-Vault-Token': token }}, function(err, res, body) {
+          assert.ifError(err)
+          assert.equal(res.statusCode, 204)
+
+          loader({ url: 'http://localhost:8200', keepPaths: true, path: 'secret/live/demo', method: 'app-id', appId: 'svc-demo-api' , userId: 'demo-live' })(confabulous, function(err, config) {
+              assert.ifError(err)
+              assert.equal(config['secret/live/demo'].loaded, 'loaded')
+              done()
+          })
+      })
+  })
+
     it('should timeout', function(done) {
 
         loader({ url: 'http://localhost:8200', path: 'secret/live/demo', method: 'app-id', appId: 'svc-demo-api' , userId: 'demo-live', request: { timeout: 1 } })(confabulous, function(err, config) {
