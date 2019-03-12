@@ -59,6 +59,7 @@ module.exports = function (_options, postProcessors) {
         }
         case 'token': {
           options.request.headers['X-Vault-Token'] = options.token
+          cb()
           break
         }
         default: {
