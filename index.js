@@ -72,7 +72,7 @@ module.exports = function (_options, postProcessors) {
       async.each(options.paths, (path, next) => {
         var configUrl = options.url + '/v1/' + path
         debug('watch: %s, interval:%s', configUrl, options.watch.interval)
-        if (!options.watch) return cb()
+        if (!options.watch) return next()
         var watcher = setInterval(function () {
           debug('checking for changes to: %s', options.url)
           get({ url: configUrl }, function (err, res) {
@@ -97,8 +97,8 @@ module.exports = function (_options, postProcessors) {
         debug('load: %s', configUrl)
         exists = false
         get({ url: configUrl }, function (err, res, body) {
-          if (err) return cb(err)
-          if (!contains(allowedResponseCodes, res.statusCode)) return cb(new Error(format('%s returned %d', configUrl, res.statusCode)))
+          if (err) return next(err)
+          if (!contains(allowedResponseCodes, res.statusCode)) return next(new Error(format('%s returned %d', configUrl, res.statusCode)))
           if (res.statusCode === 404) return next(null, { [path]: [] })
           exists = true
           checksums.set(path, generateChecksum(res.body.data))
