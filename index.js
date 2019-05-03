@@ -58,7 +58,7 @@ module.exports = function (_options, postProcessors) {
           break
         }
         case 'token': {
-          options.request.headers['X-Vault-Token'] = options.token
+          options.request.headers['X-Vault-Token'] = typeof options.token === 'function' ? options.token() : options.token
           cb()
           break
         }
@@ -75,11 +75,14 @@ module.exports = function (_options, postProcessors) {
         if (!options.watch) return next()
         var watcher = setInterval(function () {
           debug('checking for changes to: %s', options.url)
-          get({ url: configUrl }, function (err, res) {
-            if (!watcher) return
-            if (err) return emitter.emit('error', err)
-            if (!contains(allowedResponseCodes, res.statusCode)) return emitter.emit('error', new Error(format('%s returned %d', configUrl, res.statusCode)))
-            if ((res.statusCode === 404 && exists) || (res.statusCode === 200 && (!exists || isModified(res, path)))) emitter.emit('change')
+          authenticate(function (err) {
+            if (err) return emitter.error(err)
+            get({ url: configUrl }, function (err, res) {
+              if (!watcher) return
+              if (err) return emitter.emit('error', err)
+              if (!contains(allowedResponseCodes, res.statusCode)) return emitter.emit('error', new Error(format('%s returned %d', configUrl, res.statusCode)))
+              if ((res.statusCode === 404 && exists) || (res.statusCode === 200 && (!exists || isModified(res, path)))) emitter.emit('change')
+            })
           })
         }, duration(options.watch.interval))
         watcher.unref()
